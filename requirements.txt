@@ -1,0 +1,10 @@
+ccxt
+pandas
+numpy
+ta
+backtrader
+scipy
+schedule
+vectorbt
+backtesting
+plotly
