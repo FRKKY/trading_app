@@ -4,27 +4,24 @@ import ccxt
 import pandas as pd
 from datetime import datetime
 
-def fetch_binance_futures_symbols():
-    binance = ccxt.binance()
-    binance.options['defaultType'] = 'future'
-    markets = binance.load_markets()
-    symbols = [symbol for symbol in markets if markets[symbol]['type'] == 'future' and '/' in symbol]
+def fetch_binance_usdm_symbols():
+    binance_usdm = ccxt.binanceusdm()
+    markets = binance_usdm.load_markets()
+    symbols = [symbol for symbol in markets if markets[symbol]['quote'] == 'USDT']
     return symbols
 
 def fetch_binance_futures_ohlcv(symbol, timeframe, start_date):
-    binance = ccxt.binance()
-    binance.options['defaultType'] = 'future'
-
-    since = binance.parse8601(f'{start_date}T00:00:00Z')
-    now = binance.milliseconds()
+    binance_usdm = ccxt.binanceusdm()
+    since = binance_usdm.parse8601(f'{start_date}T00:00:00Z')
+    now = binance_usdm.milliseconds()
 
     all_ohlcv = []
     while since < now:
         try:
-            ohlcv = binance.fetch_ohlcv(symbol, timeframe, since)
+            ohlcv = binance_usdm.fetch_ohlcv(symbol, timeframe, since)
             if not ohlcv:
                 break
-            since = ohlcv[-1][0] + binance.parse_timeframe(timeframe) * 1000
+            since = ohlcv[-1][0] + binance_usdm.parse_timeframe(timeframe) * 1000
             all_ohlcv += ohlcv
         except Exception as e:
             print(f'Error fetching data for {symbol}: {e}')
@@ -38,7 +35,7 @@ def save_to_csv(data, filename):
     df.to_csv(filename, index=False)
 
 def main():
-    symbols = fetch_binance_futures_symbols()
+    symbols = fetch_binance_usdm_symbols()
     symbol = input("Enter the ticker symbol you want to collect data for (e.g., BTC/USDT): ").upper()
     if symbol not in symbols:
         print("Invalid ticker symbol.")
@@ -48,7 +45,7 @@ def main():
     start_date = input("Enter the start date (YYYY-MM-DD) or type 'earliest' for the earliest possible start date: ")
     
     if start_date.lower() == 'earliest':
-        start_date = '2017-08-17'  # Binance Futures started on this date
+        start_date = '2017-08-17'  # Earliest possible start date for Binance Futures USDM
     else:
         try:
             datetime.strptime(start_date, '%Y-%m-%d')
